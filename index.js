@@ -40,13 +40,27 @@ app.post('/api/signup', (req, res) => {
   res.status(201).json({ message: 'User created!', user: { email, role } });
 });
 
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
-  const user = users.find((u) => u.email === email && u.password === password);
-  if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
-  res.json({ message: 'Welcome back!', user: { email, role: user.role } });
+  try {
+    const result = await pool.query(
+      'SELECT * FROM users WHERE email = $1 AND password = $2',
+      [email, password]
+    );
+
+    if (result.rows.length > 0) {
+      console.log('Login successful for:', result.rows[0]);
+      res.status(200).json({ message: 'Login successful!' });
+    } else {
+      res.status(401).json({ error: 'Invalid email or password' });
+    }
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Something went wrong' });
+  }
 });
+
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
