@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Signup</title>
+</head>
+<body>
+  <h2>Signup Form</h2>
+  <form id="signup-form">
+    <input type="email" placeholder="Email" id="email" required /><br />
+    <input type="password" placeholder="Password" id="password" required /><br />
+    <select id="role">
+      <option value="volunteer">Volunteer</option>
+      <option value="ngo">NGO</option>
+    </select><br />
+    <button type="submit">Sign Up</button>
+  </form>
+
+  <pre id="output"></pre>
+
+  <script>
+    const form = document.getElementById('signup-form');
+    const output = document.getElementById('output');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const res = await fetch('https://my-auth-app.onrender.com/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: document.getElementById('email').value,
+          password: document.getElementById('password').value,
+          role: document.getElementById('role').value
+        })
+      });
+
+      const data = await res.json();
+      output.textContent = JSON.stringify(data, null, 2);
+    });
+  </script>
+</body>
+</html>

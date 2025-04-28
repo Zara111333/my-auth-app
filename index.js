@@ -6,6 +6,12 @@ const PORT = 3001;
 app.use(express.json());
 
 let users = []; // Memory only (resets if you restart)
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL, // put this in .env
+  ssl: { rejectUnauthorized: false }
+});
 
 app.post('/api/signup', (req, res) => {
   const { email, password, role } = req.body;
