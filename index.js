@@ -60,6 +60,7 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
+
 app.post('/api/profile', async (req, res) => {
   const { user_id, skills, interests, city } = req.body;
 
