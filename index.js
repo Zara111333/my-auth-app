@@ -21,8 +21,8 @@ app.post('/api/signup', async (req, res) => {
     console.log('New user:', result.rows[0]);
     res.status(201).json({ message: 'User created!' });
   } catch (err) {
-    console.error('Signup error:', err);
-    res.status(500).json({ error: 'Something went wrong' });
+    console.error('Signup error:', err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -41,11 +41,12 @@ app.post('/api/login', async (req, res) => {
       res.status(401).json({ error: 'Invalid email or password' });
     }
   } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ error: 'Something went wrong' });
+    console.error('Login error:', err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
+// PROFILE
 app.post('/api/profile', async (req, res) => {
   const { user_id, skills, interests, city } = req.body;
 
@@ -58,11 +59,12 @@ app.post('/api/profile', async (req, res) => {
     console.log('New profile created:', result.rows[0]);
     res.status(201).json({ message: 'Profile created!', profile: result.rows[0] });
   } catch (err) {
-    console.error('Profile creation error:', err.message); // <<< MAKE SURE THIS PRINTS
-    res.status(500).json({ error: err.message }); // <<< SEND BACK the REAL error
+    console.error('Profile creation error:', err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
+// MATCHMAKING
 app.get('/api/match/:userId', async (req, res) => {
   const userId = parseInt(req.params.userId);
 
@@ -87,8 +89,8 @@ app.get('/api/match/:userId', async (req, res) => {
 
     res.status(200).json({ matches });
   } catch (err) {
-    console.error('Matching error:', err);
-    res.status(500).json({ error: 'Matchmaking failed' });
+    console.error('Matching error:', err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
