@@ -63,6 +63,37 @@ app.post('/api/profile', async (req, res) => {
   }
 });
 
+app.get('/api/match/:userId', async (req, res) => {
+  const userId = parseInt(req.params.userId);
+
+  try {
+    // Get the profile of the user
+    const { rows: userProfiles } = await pool.query(
+      'SELECT * FROM profiles WHERE user_id = $1',
+      [userId]
+    );
+
+    if (userProfiles.length === 0) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+
+    const userProfile = userProfiles[0];
+
+    // Find others who share similar interests
+    const { rows: matches } = await pool.query(
+      `SELECT * FROM profiles 
+       WHERE user_id != $1
+       AND (skills && $2::text[] OR interests && $3::text[])`,
+      [userId, userProfile.skills, userProfile.interests]
+    );
+
+    res.status(200).json({ matches });
+  } catch (err) {
+    console.error('Matching error:', err);
+    res.status(500).json({ error: 'Matchmaking failed' });
+  }
+});
+
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
