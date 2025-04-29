@@ -67,7 +67,6 @@ app.get('/api/match/:userId', async (req, res) => {
   const userId = parseInt(req.params.userId);
 
   try {
-    // Get the profile of the user
     const { rows: userProfiles } = await pool.query(
       'SELECT * FROM profiles WHERE user_id = $1',
       [userId]
@@ -79,7 +78,6 @@ app.get('/api/match/:userId', async (req, res) => {
 
     const userProfile = userProfiles[0];
 
-    // Find others who share similar interests
     const { rows: matches } = await pool.query(
       `SELECT * FROM profiles 
        WHERE user_id != $1
@@ -93,7 +91,6 @@ app.get('/api/match/:userId', async (req, res) => {
     res.status(500).json({ error: 'Matchmaking failed' });
   }
 });
-
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
