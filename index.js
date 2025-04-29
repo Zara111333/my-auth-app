@@ -46,21 +46,23 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// PROFILE
 app.post('/api/profile', async (req, res) => {
   const { user_id, skills, interests, city } = req.body;
+
   try {
     const result = await pool.query(
       'INSERT INTO profiles (user_id, skills, interests, city) VALUES ($1, $2, $3, $4) RETURNING *',
       [user_id, skills, interests, city]
     );
+
     console.log('New profile created:', result.rows[0]);
     res.status(201).json({ message: 'Profile created!', profile: result.rows[0] });
   } catch (err) {
-    console.error('Profile creation error:', err);
-    res.status(500).json({ error: 'Something went wrong' });
+    console.error('Profile creation error:', err.message); // <<< MAKE SURE THIS PRINTS
+    res.status(500).json({ error: err.message }); // <<< SEND BACK the REAL error
   }
 });
+
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
