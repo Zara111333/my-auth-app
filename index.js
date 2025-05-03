@@ -121,10 +121,10 @@ Return JSON with: user_id, score, and reason.
     const text = completion.choices[0].message.content;
 
     res.send({ ai_matches: text });
-  } catch (err) {
-    console.error('AI match error:', err);
-    res.status(500).json({ error: 'AI matching failed' });
-  }
+  } } catch (err) {
+  console.error('AI match error:', err.response?.data || err.message || err);
+  res.status(500).json({ error: 'AI matching failed' });
+}
 });
 
 
