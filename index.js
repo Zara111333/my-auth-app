@@ -64,6 +64,39 @@ app.get('/', (req, res) => {
   res.send('✅ Deployed code is working!');
 });
 
+// MATCHING ENDPOINT
+app.get('/api/match/:id', async (req, res) => {
+  const userId = parseInt(req.params.id);
+  try {
+    const userProfile = await pool.query(
+      'SELECT * FROM profiles WHERE user_id = $1',
+      [userId]
+    );
+
+    if (userProfile.rows.length === 0) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+
+    const { skills, interests, city } = userProfile.rows[0];
+
+    const matches = await pool.query(
+      `SELECT * FROM profiles
+       WHERE user_id != $1
+       AND city = $2
+       AND (
+         skills && $3::text[] OR
+         interests && $4::text[]
+       )`,
+      [userId, city, skills, interests]
+    );
+
+    res.json({ matches: matches.rows });
+  } catch (err) {
+    console.error('Match error:', err);
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+});
+
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
