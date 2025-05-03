@@ -68,51 +68,6 @@ app.get('/', (req, res) => {
 });
 
 // MATCHING ENDPOINT
-app.get('/api/match/:id', async (req, res) => {
-  const userId = parseInt(req.params.id);
-  try {
-    const { rows: userResult } = await pool.query(
-      'SELECT * FROM profiles WHERE user_id = $1',
-      [userId]
-    );
-
-    if (userResult.length === 0) {
-      return res.status(404).json({ error: 'Profile not found' });
-    }
-
-    const user = userResult[0];
-    const { skills: userSkills, interests: userInterests, city: userCity } = user;
-
-    const { rows: candidates } = await pool.query(
-      'SELECT * FROM profiles WHERE user_id != $1',
-      [userId]
-    );
-
-    const matches = candidates.map((candidate) => {
-      const sharedSkills = candidate.skills.filter(skill => userSkills.includes(skill));
-      const sharedInterests = candidate.interests.filter(interest => userInterests.includes(interest));
-
-      let score = 0;
-      score += sharedSkills.length * 1;
-      score += sharedInterests.length * 2;
-      if (candidate.city === userCity) score += 1;
-
-      return {
-        ...candidate,
-        match_score: score,
-        sharedSkills,
-        sharedInterests
-      };
-    }).filter(match => match.match_score > 0)
-      .sort((a, b) => b.match_score - a.match_score);
-
-    res.json({ matches });
-  } catch (err) {
-    console.error('Match scoring error:', err);
-    res.status(500).json({ error: 'Match scoring failed' });
-  }
-});
-
 app.get('/api/match/ai/:id', async (req, res) => {
   const userId = parseInt(req.params.id);
 
