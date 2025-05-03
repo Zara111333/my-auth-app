@@ -82,47 +82,38 @@ app.get('/api/match/ai/:id', async (req, res) => {
     }
 
     const user = userResult[0];
-
     const { rows: candidates } = await pool.query(
       'SELECT * FROM profiles WHERE user_id != $1',
       [userId]
     );
 
-    const systemPrompt = `
-You are a matchmaking assistant for a volunteering platform.
-Your job is to analyze how well volunteer profiles match the interests and skills of this main user.
+    const matches = [];
 
-MAIN USER:
-City: ${user.city}
-Skills: ${user.skills.join(', ')}
-Interests: ${user.interests.join(', ')}
+    for (const candidate of candidates) {
+      const skillText = `Skills: ${user.skills.join(', ')}`
+      const interestText = `Interests: ${user.interests.join(', ')}`
 
-Here are the CANDIDATES:
-${candidates.map((c, i) => `
-Candidate ${i + 1}:
-User ID: ${c.user_id}
-City: ${c.city}
-Skills: ${c.skills.join(', ')}
-Interests: ${c.interests.join(', ')}
-`).join('\n')}
+      const candidateSkillText = `Skills: ${candidate.skills.join(', ')}`
+      const candidateInterestText = `Interests: ${candidate.interests.join(', ')}`
 
-Based on skills, interests, and city, rank the top 3 best matching candidates with a score from 1 to 10 and explain why.
-Return JSON with: user_id, score, and reason.
-`;
+      const skillScore = await getSimilarityScore(skillText, candidateSkillText);
+      const interestScore = await getSimilarityScore(interestText, candidateInterestText);
+      const cityScore = user.city === candidate.city ? 1 : 0;
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: systemPrompt }
-      ],
-      temperature: 0.7
-    });
+      const matchScore = (skillScore + interestScore + cityScore) / 3;
 
-    const text = completion.choices[0].message.content;
+      matches.push({
+        user_id: candidate.user_id,
+        match_score: matchScore.toFixed(2),
+        shared_city: cityScore === 1,
+      });
+    }
 
-    res.send({ ai_matches: text });
+    matches.sort((a, b) => b.match_score - a.match_score);
+
+    res.json({ matches });
   } catch (err) {
-    console.error('AI match error:', err.response?.data || err.message || err);
+    console.error('AI match error:', err);
     res.status(500).json({ error: 'AI matching failed' });
   }
 });
