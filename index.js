@@ -2,8 +2,32 @@ const express = require('express');
 const { Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 3001;
-const { OpenAI } = require('openai');
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+const axios = require('axios');
+
+async function getSimilarityScore(text1, text2) {
+  try {
+    const response = await axios.post(
+      'https://api-inference.huggingface.co/models/sentence-transformers/paraphrase-MiniLM-L6-v2',
+      {
+        inputs: {
+          source_sentence: text1,
+          sentences: [text2]
+        }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.HF_API_KEY}`
+        }
+      }
+    );
+
+    return response.data[0];
+  } catch (error) {
+    console.error('Hugging Face API error:', error.response?.data || error.message);
+    return 0;
+  }
+}
 
 
 app.use(express.json());
