@@ -2,6 +2,9 @@ const express = require('express');
 const { Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 3001;
+const { OpenAI } = require('openai');
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
 
 app.use(express.json());
 
@@ -107,6 +110,65 @@ app.get('/api/match/:id', async (req, res) => {
   } catch (err) {
     console.error('Match scoring error:', err);
     res.status(500).json({ error: 'Match scoring failed' });
+  }
+});
+
+app.get('/api/match/ai/:id', async (req, res) => {
+  const userId = parseInt(req.params.id);
+
+  try {
+    const { rows: userResult } = await pool.query(
+      'SELECT * FROM profiles WHERE user_id = $1',
+      [userId]
+    );
+
+    if (userResult.length === 0) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+
+    const user = userResult[0];
+
+    const { rows: candidates } = await pool.query(
+      'SELECT * FROM profiles WHERE user_id != $1',
+      [userId]
+    );
+
+    const systemPrompt = `
+You are a matchmaking assistant for a volunteering platform.
+Your job is to analyze how well volunteer profiles match the interests and skills of this main user.
+
+MAIN USER:
+City: ${user.city}
+Skills: ${user.skills.join(', ')}
+Interests: ${user.interests.join(', ')}
+
+Here are the CANDIDATES:
+${candidates.map((c, i) => `
+Candidate ${i + 1}:
+User ID: ${c.user_id}
+City: ${c.city}
+Skills: ${c.skills.join(', ')}
+Interests: ${c.interests.join(', ')}
+`).join('\n')}
+
+Based on skills, interests, and city, rank the top 3 best matching candidates with a score from 1 to 10 and explain why.
+Return JSON with: user_id, score, and reason.
+`;
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: systemPrompt }
+      ],
+      temperature: 0.7
+    });
+
+    const text = completion.choices[0].message.content;
+
+    res.send({ ai_matches: text });
+  } catch (err) {
+    console.error('AI match error:', err);
+    res.status(500).json({ error: 'AI matching failed' });
   }
 });
 
