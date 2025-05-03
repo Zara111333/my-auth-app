@@ -1,10 +1,10 @@
 const express = require('express');
 const { Pool } = require('pg');
+const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-const axios = require('axios');
-
+// ✅ Hugging Face similarity scoring function
 async function getSimilarityScore(text1, text2) {
   try {
     const response = await axios.post(
@@ -21,23 +21,22 @@ async function getSimilarityScore(text1, text2) {
         }
       }
     );
-
-    return response.data[0];
+    return response.data[0]; // returns a number between 0–1
   } catch (error) {
     console.error('Hugging Face API error:', error.response?.data || error.message);
     return 0;
   }
 }
 
-
-app.use(express.json());
-
+// ✅ Database connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
-// Signup route
+app.use(express.json());
+
+// ✅ Signup
 app.post('/api/signup', async (req, res) => {
   const { email, password, role } = req.body;
   try {
@@ -52,7 +51,7 @@ app.post('/api/signup', async (req, res) => {
   }
 });
 
-// Login route
+// ✅ Login
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -71,6 +70,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+// ✅ Create profile
 app.post('/api/profile', async (req, res) => {
   const { user_id, skills, interests, city } = req.body;
 
@@ -87,11 +87,7 @@ app.post('/api/profile', async (req, res) => {
   }
 });
 
-app.get('/', (req, res) => {
-  res.send('✅ Deployed code is working!');
-});
-
-// MATCHING ENDPOINT
+// ✅ AI Match route
 app.get('/api/match/ai/:id', async (req, res) => {
   const userId = parseInt(req.params.id);
 
@@ -142,7 +138,12 @@ app.get('/api/match/ai/:id', async (req, res) => {
   }
 });
 
+// ✅ Home route
+app.get('/', (req, res) => {
+  res.send('✅ Deployed code is working!');
+});
 
+// ✅ Start the server
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
