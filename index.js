@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
+app.use(express.json());
+
 
 dotenv.config();
 
@@ -39,8 +41,6 @@ app.use(cors({
   },
   credentials: true,
 }));
-
-app.use(express.json());
 
 // Supabase setup
 const supabase = createClient(
