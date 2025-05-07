@@ -3,8 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 app.use(express.json());
-const cors = require('cors');
-app.use(cors());
+
 
 
 dotenv.config();
