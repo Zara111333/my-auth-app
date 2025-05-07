@@ -9,6 +9,8 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3001;
 
+
+
 // 🔁 Replace this with your actual frontend URL from Render
 const allowedOrigins = [
   'http://localhost:5173',
@@ -25,16 +27,21 @@ app.use(
 
 app.use(express.json());
 
-app.post('/match', async (req, res) => {
+app.post('/api/profile/:id', async (req, res) => {
   try {
-    const input = req.body;
-    const result = await aiMatch(input);
-    res.json(result);
-  } catch (err) {
-    console.error('Match error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    const userId = req.params.id;
+    const { interests, skills, location } = req.body;
+
+    // You can add logic here to save the profile in your DB
+    console.log(`Profile for ${userId}:`, { interests, skills, location });
+
+    res.status(200).json({ message: 'Profile created successfully' });
+  } catch (error) {
+    console.error('Profile creation failed:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 app.get('/', (req, res) => {
   res.send('Cryptess backend is running.');
