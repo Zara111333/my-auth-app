@@ -1,40 +1,48 @@
 import express from 'express';
 import cors from 'cors';
+import dotenv from 'dotenv';
+import { Pool } from 'pg';
+import aiMatch from './utils.js';
+
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const port = process.env.PORT || 3001;
 
-// 👇 Enable CORS for your frontend
-app.use(
-  cors({
-    origin: ['http://localhost:5173', 'https://my-auth-app-qdbi.onrender.com'],
-    methods: ['GET', 'POST'],
-    credentials: true,
-  })
-);
+// 🔁 Replace this with your actual frontend URL from Render
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://cryptess-frontend.onrender.com'  // ✅ Add your real Render frontend URL here
+];
 
-// 👇 Required to parse JSON request bodies
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
 app.use(express.json());
 
-// 👇 Dummy route to confirm backend is alive
-app.get('/', (req, res) => {
-  res.send('Backend is live!');
-});
-
-// 👇 Your profile creation endpoint (adjust logic as needed)
-app.post('/api/profile', (req, res) => {
-  const { user_id, skills, interests, city } = req.body;
-
-  if (!user_id || !skills || !interests || !city) {
-    return res.status(400).json({ error: 'Missing required fields' });
+app.post('/match', async (req, res) => {
+  try {
+    const input = req.body;
+    const result = await aiMatch(input);
+    res.json(result);
+  } catch (err) {
+    console.error('Match error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
-
-  console.log('Profile received:', { user_id, skills, interests, city });
-
-  res.status(201).json({ message: 'Profile created successfully' });
 });
 
-// 👇 Start server
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.get('/', (req, res) => {
+  res.send('Cryptess backend is running.');
+});
+
+app.listen(port, () => {
+  console.log(`🚀 Server listening on port ${port}`);
 });
