@@ -2,87 +2,36 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
-app.use(express.json());
-
-
 
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+app.use(cors());
+app.use(express.json());
 
-app.get('/api/profile/:id', (req, res) => {
-  const userId = req.params.id;
-
-  // Replace this with actual logic later
-  const mockProfile = {
-    id: userId,
-    name: 'John Doe',
-    city: 'Amsterdam',
-    interests: ['painting', 'drawing'],
-    skills: ['animation', 'graphic']
-  };
-
-  res.json(mockProfile);
-});
-
-// CORS config – allow your deployed frontend
-const allowedOrigins = [
-  'http://localhost:5173',
-  'https://cryptess-frontend.onrender.com',
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-}));
-
-// Supabase setup
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_KEY
 );
 
-// Health check
 app.get('/', (req, res) => {
-  res.send('API is live 🚀');
+  res.send('✅ Cryptess backend is running!');
 });
 
-// Create or update user profile
-app.post('/api/profile/:id', async (req, res) => {
-  const userId = req.params.id;
-  const { interests, skills, location } = req.body;
+app.get('/api/profile/:id', async (req, res) => {
+  const { id } = req.params;
 
-  try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .upsert([
-        {
-          user_id: userId,
-          interests,
-          skills,
-          location
-        }
-      ]);
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', id)
+    .single();
 
-    if (error) {
-      console.error('Supabase error:', error);
-      return res.status(500).json({ error: 'Database error' });
-    }
-
-    res.status(200).json({ message: 'Profile saved successfully', data });
-  } catch (err) {
-    console.error('Server error:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
 });
 
-app.listen(port, () => {
-  console.log(`✅ Server is running on http://localhost:${port}`);
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
