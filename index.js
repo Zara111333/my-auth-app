@@ -8,6 +8,21 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
+app.get('/api/profile/:id', (req, res) => {
+  const userId = req.params.id;
+
+  // Replace this with actual logic later
+  const mockProfile = {
+    id: userId,
+    name: 'John Doe',
+    city: 'Amsterdam',
+    interests: ['painting', 'drawing'],
+    skills: ['animation', 'graphic']
+  };
+
+  res.json(mockProfile);
+});
+
 // CORS config – allow your deployed frontend
 const allowedOrigins = [
   'http://localhost:5173',
