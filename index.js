@@ -11,11 +11,12 @@ const app = express();
 // ✅ CORS config to allow your frontend
 app.use(
   cors({
-    origin: 'https://cryptess-frontend.onrender.com',
+    origin: ['https://cryptess-frontend.onrender.com'],
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type'],
   })
 );
+
 
 app.use(express.json());
 
