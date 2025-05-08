@@ -15,23 +15,30 @@ const supabase = createClient(
 );
 
 app.get('/', (req, res) => {
-  res.send('✅ Cryptess backend is running!');
+  res.send('Server is up and running!');
 });
 
-app.get('/api/profile/:id', async (req, res) => {
-  const { id } = req.params;
+app.post('/api/profile', async (req, res) => {
+  try {
+    const { user_id, interests, skills, location } = req.body;
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', id)
-    .single();
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert([{ user_id, interests, skills, location }]);
 
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+    if (error) {
+      console.error('Error inserting profile:', error.message);
+      return res.status(500).json({ error: error.message });
+    }
+
+    res.status(200).json({ success: true, data });
+  } catch (err) {
+    console.error('Profile creation error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server listening on http://localhost:${PORT}`);
 });
