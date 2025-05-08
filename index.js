@@ -1,41 +1,42 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
+  process.env.SUPABASE_SERVICE_KEY
 );
 
-app.get('/', (req, res) => {
-  res.send('Server is up and running!');
+// 🔥 Route to create profile
+app.post('/api/profile', async (req, res) => {
+  const { user_id, skills, interests, city } = req.body;
+
+  if (!user_id || !skills || !interests || !city) {
+    return res.status(400).json({ error: 'All fields are required.' });
+  }
+
+  const { error } = await supabase.from('profiles').insert([
+    { user_id, skills, interests, city },
+  ]);
+
+  if (error) {
+    console.error('❌ Supabase error:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.status(200).json({ message: '✅ Profile created successfully' });
 });
 
-app.post('/api/profile', async (req, res) => {
-  try {
-    const { user_id, interests, skills, location } = req.body;
-
-    const { data, error } = await supabase
-      .from('profiles')
-      .insert([{ user_id, interests, skills, location }]);
-
-    if (error) {
-      console.error('Error inserting profile:', error.message);
-      return res.status(500).json({ error: error.message });
-    }
-
-    res.status(200).json({ success: true, data });
-  } catch (err) {
-    console.error('Profile creation error:', err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+// 🟢 Health check or fallback
+app.get('/', (req, res) => {
+  res.send('🚀 Cryptess API is running');
 });
 
 const PORT = process.env.PORT || 3000;
