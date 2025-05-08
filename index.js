@@ -6,7 +6,13 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-app.use(cors({ origin: '*' }));
+app.use(
+  cors({
+    origin: 'https://cryptess-frontend.onrender.com',
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type'],
+  })
+);
 app.use(express.json());
 
 const supabase = createClient(
